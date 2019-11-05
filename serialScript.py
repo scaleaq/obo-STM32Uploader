@@ -35,7 +35,25 @@ class Flasher():
             exit(1)
         
         if response == ACK:
-            print("Host ready!")
+            print("Device ready!")
+            
+    def getCmd(self):
+        print("Start Get...") #ToDo: Remove
+        self.serialInstance.write(to_bytes([0x00, 0xFF]))
+        
+        #Wait for ACK/NACK
+        response = self.serialInstance.read()
+        
+        if response == ACK:
+            print("Got ACK")
+            #Get the number of bytes
+            resp = self.serialInstance.read()
+            resp = self.serialInstance.read(int(resp))
+            #print the output of get here or store somewhere
+            
+        else
+            print("Communication Error!")
+            exit(1)
     
 
 def parse_arguments():
