@@ -60,6 +60,9 @@ if __name__ == "__main__":
     if args.b is None:
         print("Baud rate not selected, default=115200")
         args.b = 115200
+    elif (int(args.b) < 1200 or int(args.b) > 115200) is True:
+        print("Baud Rate should be between 1200 and 115200")
+        exit(0)
 
     flashing = Flasher(args.d, args.b)
     main(flashing)
