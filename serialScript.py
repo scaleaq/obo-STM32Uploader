@@ -2,6 +2,9 @@
 import argparse
 from serial import *
 
+ACK = 0x79
+NACK = 0x1F
+
 class Flasher():
 
     def __init__(self, device, baud=115200):
@@ -11,6 +14,7 @@ class Flasher():
         self.serialInstance.bytesize = EIGHTBITS
         self.serialInstance.parity = PARITY_EVEN
         self.serialInstance.stopbits = STOPBITS_ONE
+        self.serialInstance.timeout = 1
         
         self.serialInstance.open()
         
@@ -19,9 +23,19 @@ class Flasher():
             exit(1)
         
         
-        
+    #Send 0x7f on serial so that the host selects the connected UART port
+    #and adjusts the baud rate.
+    #All the command routines should start after this.
     def checkReady(self):
         self.serialInstance.write(to_bytes([0x7F]))
+        response = self.serialInstance.read()
+        
+        if len(response) == 0:
+            print("Read timeout!")
+            exit(1)
+        
+        if response == ACK:
+            print("Host ready!")
     
 
 def parse_arguments():
@@ -33,7 +47,7 @@ def parse_arguments():
     
 def main(FlasherObj):
     print("Here...")
-    #FlasherObj.checkReady()
+    FlasherObj.checkReady()
 
 if __name__ == "__main__":
     arg_parser = parse_arguments()
