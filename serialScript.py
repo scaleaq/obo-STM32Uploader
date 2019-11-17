@@ -15,26 +15,27 @@ class Flasher():
         self.serialInstance.parity = PARITY_EVEN
         self.serialInstance.stopbits = STOPBITS_ONE
         self.serialInstance.timeout = 1
-        
+
         self.serialInstance.open()
-        
+
         if self.serialInstance.isOpen() is False:
             print("Cannot open serial port!")
             exit(1)
-        
-        
+
     #Send 0x7f on serial so that the host selects the connected UART port
     #and adjusts the baud rate.
     #All the command routines should start after this.
     def checkReady(self):
         self.serialInstance.write(to_bytes([0x7F]))
         response = self.serialInstance.read()
+        response = hex(int.from_bytes(response,byteorder='little')) 
+        #print(response)
         
         if len(response) == 0:
             print("Read timeout!")
             exit(1)
         
-        if response == ACK:
+        if response == hex(ACK):
             print("Device ready!")
             
     def getCmd(self):
@@ -51,7 +52,7 @@ class Flasher():
             resp = self.serialInstance.read(int(resp))
             #print the output of get here or store somewhere
             
-        else
+        else:
             print("Communication Error!")
             exit(1)
     
