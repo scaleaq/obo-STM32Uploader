@@ -45,7 +45,7 @@ class Flasher():
         #Wait for ACK/NACK
         response = self.serialInstance.read()
         
-        if response == ACK:
+        if response == hex(ACK):
             print("Got ACK")
             #Get the number of bytes
             resp = self.serialInstance.read()
