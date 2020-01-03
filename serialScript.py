@@ -21,6 +21,10 @@ class Flasher():
         if self.serialInstance.isOpen() is False:
             print("Cannot open serial port!")
             exit(1)
+            
+    #CRC
+    def getCRC(data):
+        print("take crc here") 
 
     #Send 0x7f on serial so that the host selects the connected UART port
     #and adjusts the baud rate.
@@ -90,6 +94,17 @@ class Flasher():
         else:
             print("Communication Erro!")
             exit(1)
+            
+    def readMemoryCmd(self):
+        print("Sending Read Memory Command...")
+        resp = self.serialInstance.write(to_bytes([0x11, 0xEE]))
+        
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        if response == hex(ACK):
+            print("Got ACK")
+            #Sending a dummy hardcoded haddress here, add arg later
+            resp = self.serialInstance.write()
             
         
 def parse_arguments():
