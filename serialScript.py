@@ -56,6 +56,22 @@ class Flasher():
         else:
             print("Communication Error!")
             exit(1)
+            
+    def getVersionAndReadProtection(self):
+        print("Get Version and Read Protection Status")
+        self.serialInstance.write(to_bytes([0x01, 0xFE]))
+        
+        #wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        
+        if response == hex(ACK):
+            print("Got ACK")
+            resp = self.serialInstance.read(3)
+            print(resp) #Should print Bootloader Version and 2 option bytes
+        else:
+            print("Communication Error!")
+            exit(1)    
+        
     
 
 def parse_arguments():
