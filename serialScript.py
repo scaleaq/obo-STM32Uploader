@@ -57,7 +57,7 @@ class Flasher():
             print("Communication Error!")
             exit(1)
             
-    def getVersionAndReadProtection(self):
+    def getVersionAndReadProtectionCmd(self):
         print("Get Version and Read Protection Status")
         self.serialInstance.write(to_bytes([0x01, 0xFE]))
         
@@ -70,10 +70,28 @@ class Flasher():
             print(resp) #Should print Bootloader Version and 2 option bytes
         else:
             print("Communication Error!")
-            exit(1)    
+            exit(1)
+            
+            
+    def getIDCmd(self):
+        print("Sending Get ID Command...")
+        self.serialInstance.write(to_bytes([0x02, 0xFD]))
         
-    
-
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        
+        if response == hex(ACK):
+            print("Got ACK")
+            resp = self.serialInstance.read(1)
+            #The device sends number of bytes-1 which is excluding ACK
+            resp = self.serialInstance.read(int(resp)) #Include ACK
+            print(resp)
+            
+        else:
+            print("Communication Erro!")
+            exit(1)
+            
+        
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', help='Set serial baud rate')
