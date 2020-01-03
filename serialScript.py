@@ -49,8 +49,9 @@ class Flasher():
             print("Got ACK")
             #Get the number of bytes
             resp = self.serialInstance.read()
-            resp = self.serialInstance.read(int(resp))
+            resp = self.serialInstance.read(int(resp)) #Read resp number of bytes
             #print the output of get here or store somewhere
+            print(resp) #ToDo: remove
             
         else:
             print("Communication Error!")
@@ -65,8 +66,10 @@ def parse_arguments():
     return parser
     
 def main(FlasherObj):
-    print("Here...")
+    print("Check Ready...")
     FlasherObj.checkReady()
+    print("Sending Get Command")
+    FlasherObj.getCmd()
 
 if __name__ == "__main__":
     arg_parser = parse_arguments()
