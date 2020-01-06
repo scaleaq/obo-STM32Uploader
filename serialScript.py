@@ -25,6 +25,11 @@ class Flasher():
     #CRC
     def getCRC(data):
         print("take crc here") 
+        crc = 0xff;
+        for d in data:
+            crc = crc ^ data
+            
+        return crc
 
     #Send 0x7f on serial so that the host selects the connected UART port
     #and adjusts the baud rate.
@@ -104,7 +109,19 @@ class Flasher():
         if response == hex(ACK):
             print("Got ACK")
             #Sending a dummy hardcoded haddress here, add arg later
-            resp = self.serialInstance.write()
+            addr = [0x08, 0x00, 0x00, 0x00]
+            addr.append((getCRC(addr) * 0xff))
+            resp = self.serialInstance.write(addr)
+            
+            response = self.serialInstance.read(1)
+            if response == hex(ACK):
+                #Reading hardcoded 8 bytes
+                noOfBytes = 0x07 #8 Bytes
+                resp = self.serialInstance.write([noOfBytes, ~noOfBytes])
+                
+                response = self.serialInstance.read(1)
+                if response == hex(ACK):
+                    response = self.serialInstance.read(noOfBytes)
             
         
 def parse_arguments():
