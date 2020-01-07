@@ -37,31 +37,41 @@ class Flasher():
     def checkReady(self):
         self.serialInstance.write(to_bytes([0x7F]))
         response = self.serialInstance.read()
-        response = hex(int.from_bytes(response,byteorder='little')) 
-        #print(response)
+        response = hex(int.from_bytes(response,byteorder='little'))
         
         if len(response) == 0:
-            print("Read timeout!")
-            exit(1)
+            return False
         
         if response == hex(ACK):
-            print("Device ready!")
+            return True
             
     def getCmd(self):
-        print("Start Get...") #ToDo: Remove
         self.serialInstance.write(to_bytes([0x00, 0xFF]))
         
         #Wait for ACK/NACK
         response = self.serialInstance.read()
-        
+        response = hex(int.from_bytes(response,byteorder='little'))
+
         if response == hex(ACK):
-            print("Got ACK")
             #Get the number of bytes
             resp = self.serialInstance.read()
+            resp = int.from_bytes(resp,byteorder='little')
             resp = self.serialInstance.read(int(resp)) #Read resp number of bytes
-            #print the output of get here or store somewhere
-            print(resp) #ToDo: remove
-            
+            #resp = int.from_bytes(resp,byteorder='little')
+
+            resp = list(resp)
+            for r in range(len(resp)):
+                if r == 0:
+                    versionString = str(hex(resp[r]))
+                    versionString = versionString.strip('0x')
+                    versionString = versionString[:1] + '.' + versionString[1:]
+                    print("Bootloader Version: ", versionString)
+                    print("Supported Commands: ")
+                else:
+                    print(hex(resp[r]), end=" ")
+
+            print()
+                
         else:
             print("Communication Error!")
             exit(1)
@@ -132,10 +142,10 @@ def parse_arguments():
     return parser
     
 def main(FlasherObj):
-    print("Check Ready...")
-    FlasherObj.checkReady()
-    print("Sending Get Command")
-    FlasherObj.getCmd()
+    if FlasherObj.checkReady():
+        FlasherObj.getCmd()
+    else:
+        print("Cannot init device.")
 
 if __name__ == "__main__":
     arg_parser = parse_arguments()
