@@ -82,29 +82,39 @@ class Flasher():
         
         #wait for ACK/NACK
         response = self.serialInstance.read(1)
-        
+        response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             print("Got ACK")
             resp = self.serialInstance.read(3)
-            print(resp) #Should print Bootloader Version and 2 option bytes
+            resp = list(resp)
+            for r in range(len(resp)):
+                if r == 0:
+                    versionString = str(hex(resp[r]))
+                    versionString = versionString.strip('0x')
+                    versionString = versionString[:1] + '.' + versionString[1:]
+                    print("Bootloader Version: ", versionString)
+                    print("Option Bytes: ")
+                else:
+                    print(hex(resp[r]), end=" ")
+            print()
         else:
             print("Communication Error!")
             exit(1)
             
             
     def getIDCmd(self):
-        print("Sending Get ID Command...")
         self.serialInstance.write(to_bytes([0x02, 0xFD]))
         
         #Wait for ACK/NACK
         response = self.serialInstance.read(1)
-        
+        response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
-            print("Got ACK")
             resp = self.serialInstance.read(1)
             #The device sends number of bytes-1 which is excluding ACK
-            resp = self.serialInstance.read(int(resp)) #Include ACK
-            print(resp)
+            resp = int.from_bytes(resp,byteorder='little')
+            resp = self.serialInstance.read(int(resp)+1) #Include ACK
+            resp = int.from_bytes(resp,byteorder='little')
+            print("Product Id: ", hex(resp))
             
         else:
             print("Communication Erro!")
@@ -143,7 +153,8 @@ def parse_arguments():
     
 def main(FlasherObj):
     if FlasherObj.checkReady():
-        FlasherObj.getCmd()
+        #FlasherObj.getCmd()
+        FlasherObj.getIDCmd()
     else:
         print("Cannot init device.")
 
