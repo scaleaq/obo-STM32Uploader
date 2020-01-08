@@ -126,6 +126,7 @@ class Flasher():
         
         #Wait for ACK/NACK
         response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             print("Got ACK")
             #Sending a dummy hardcoded haddress here, add arg later
@@ -134,14 +135,47 @@ class Flasher():
             resp = self.serialInstance.write(addr)
             
             response = self.serialInstance.read(1)
+            response = hex(int.from_bytes(response,byteorder='little'))
             if response == hex(ACK):
                 #Reading hardcoded 8 bytes
                 noOfBytes = 0x07 #8 Bytes
                 resp = self.serialInstance.write([noOfBytes, ~noOfBytes])
                 
                 response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
                 if response == hex(ACK):
                     response = self.serialInstance.read(noOfBytes)
+                    response = list(response)
+                    for i in range(len(response)):
+                        print(hex(response[i]), end=" ")
+                        
+                        if i % 7 == 0:
+                            print()
+                            
+                            
+    def goCmd(self):
+        print("Place holder for Go Command function")
+        
+    def writeMemoryCmd(self):
+        print("Place holder for write memory command")
+        
+    def eraseMemoryCmd(self):
+        print("Place holder for erase memory command")
+        
+    def extendEraseMemoryCmd(self):
+        print("Place holder foe extended erase memory command")
+        
+    def writeProtectCmd(self):
+        print("Place holder for Write Protect command")
+        
+    def writeUnprotectCmd(self):
+        print("Place holder for Write Unprotect command")
+        
+    def readoutProtectCmd(self):
+        print("Place holder for Readout Protect command")
+        
+    def readoutUnprotect(self):
+        print("Place holder for Readout unprotect command")
             
         
 def parse_arguments():
