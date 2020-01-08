@@ -169,13 +169,32 @@ class Flasher():
         print("Place holder for Write Protect command")
         
     def writeUnprotectCmd(self):
-        print("Place holder for Write Unprotect command")
+        resp = self.serialInstance.write(to_bytes([0x73, 0x8C]))
+        
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            print("Write Unprotect Done.")
         
     def readoutProtectCmd(self):
-        print("Place holder for Readout Protect command")
+        resp = self.serialInstance.write(to_bytes([0x82, 0x7D]))
+        
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            print("Readout Protect Done.")
         
     def readoutUnprotect(self):
-        print("Place holder for Readout unprotect command")
+        resp = self.serialInstance.write(to_bytes([0x92, 0x6D]))
+        
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            print("Readout Unprotect Done.")
+        
             
         
 def parse_arguments():
