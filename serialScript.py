@@ -175,9 +175,36 @@ class Flasher():
                 print("Got NACK!")
 
 
-    def writeMemoryCmd(self):
-        print("Place holder for write memory command")
+    def writeMemoryCmd(self, addr, data, noOfBytes):
+        resp = self.serialInstance.write(to_bytes([0x31, 0xCE]))
         
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            addrList = list(bytes.fromhex(addr))
+            addrList.append((self.getCRC(addrList)))
+            print(addrList)
+            resp = self.serialInstance.write(to_bytes(addrList))
+            
+            response = self.serialInstance.read(1)
+            response = hex(int.from_bytes(response,byteorder='little'))
+            if response == hex(ACK):
+                packet = list()
+                packet.append(noOfBytes)
+                packet = packet + data
+                packet.append(self.getCRC(packet))
+                print("Sending Packet")
+                print(packet)
+                resp = self.serialInstance.write(to_bytes(packet))
+                response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
+                print(response)
+                if response == hex(ACK):
+                    print("Write Complete")
+                if response == hex(NACK):
+                    print("Got NACK!")
+
     def eraseMemoryCmd(self):
         print("Place holder for erase memory command")
         
@@ -185,7 +212,13 @@ class Flasher():
         print("Place holder foe extended erase memory command")
         
     def writeProtectCmd(self):
-        print("Place holder for Write Protect command")
+        resp = self.serialInstance.write(to_bytes([0x63, 0x9C]))
+        
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            print("Write Protect Done.")
         
     def writeUnprotectCmd(self):
         resp = self.serialInstance.write(to_bytes([0x73, 0x8C]))
@@ -227,8 +260,10 @@ def main(FlasherObj):
     if FlasherObj.checkReady():
         #FlasherObj.getCmd()
         #FlasherObj.getIDCmd()
-        #FlasherObj.readMemoryCmd("08000000", 255)
-        FlasherObj.goCmd("08000000")
+        #Send 1 byte less in count
+        FlasherObj.writeMemoryCmd("0800FF00", [0x12, 0x12, 0x12, 0x12], 3)
+        FlasherObj.readMemoryCmd("0800FF00", 4)
+        #FlasherObj.goCmd("08000000")
     else:
         print("Cannot init device.")
 
