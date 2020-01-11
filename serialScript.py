@@ -194,12 +194,9 @@ class Flasher():
                 packet.append(noOfBytes)
                 packet = packet + data
                 packet.append(self.getCRC(packet))
-                print("Sending Packet")
-                print(packet)
                 resp = self.serialInstance.write(to_bytes(packet))
                 response = self.serialInstance.read(1)
                 response = hex(int.from_bytes(response,byteorder='little'))
-                print(response)
                 if response == hex(ACK):
                     print("Write Complete")
                 if response == hex(NACK):
