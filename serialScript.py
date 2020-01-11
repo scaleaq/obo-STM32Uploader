@@ -23,11 +23,10 @@ class Flasher():
             exit(1)
             
     #CRC
-    def getCRC(data):
-        print("take crc here") 
-        crc = 0xff;
+    def getCRC(self, data):
+        crc = 0x00;
         for d in data:
-            crc = crc ^ data
+            crc = crc ^ d
             
         return crc
 
@@ -120,42 +119,62 @@ class Flasher():
             print("Communication Erro!")
             exit(1)
             
-    def readMemoryCmd(self):
-        print("Sending Read Memory Command...")
+    def readMemoryCmd(self, addr, noOfBytes):
         resp = self.serialInstance.write(to_bytes([0x11, 0xEE]))
         
         #Wait for ACK/NACK
         response = self.serialInstance.read(1)
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
-            print("Got ACK")
             #Sending a dummy hardcoded haddress here, add arg later
-            addr = [0x08, 0x00, 0x00, 0x00]
-            addr.append((getCRC(addr) * 0xff))
-            resp = self.serialInstance.write(addr)
+            #addr = [0x08, 0x00, 0x00, 0x00]
+            addrList = list(bytes.fromhex(addr))
+            addrList.append((self.getCRC(addrList)))
+            resp = self.serialInstance.write(to_bytes(addrList))
             
             response = self.serialInstance.read(1)
             response = hex(int.from_bytes(response,byteorder='little'))
             if response == hex(ACK):
                 #Reading hardcoded 8 bytes
-                noOfBytes = 0x07 #8 Bytes
-                resp = self.serialInstance.write([noOfBytes, ~noOfBytes])
-                
+                #noOfBytes = 0xFF
+                resp = self.serialInstance.write([noOfBytes, ~noOfBytes & 0xff])
                 response = self.serialInstance.read(1)
                 response = hex(int.from_bytes(response,byteorder='little'))
                 if response == hex(ACK):
+                    print("Reading bytes from device:")
                     response = self.serialInstance.read(noOfBytes)
                     response = list(response)
                     for i in range(len(response)):
-                        print(hex(response[i]), end=" ")
-                        
-                        if i % 7 == 0:
-                            print()
+                        if ((i % 8 == 0) and (i != 0)):
+                            print("")
+                        print('{:02x}'.format(response[i]), end=" ")
+
+                    print("")
+            if response == hex(NACK):
+                print("Got NACK!")
                             
                             
-    def goCmd(self):
-        print("Place holder for Go Command function")
+    def goCmd(self, addr):
+        resp = self.serialInstance.write(to_bytes([0x21, 0xDE]))
         
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            #Sending a dummy hardcoded haddress here, add arg later
+            #addr = [0x08, 0x00, 0x00, 0x00]
+            addrList = list(bytes.fromhex(addr))
+            addrList.append((self.getCRC(addrList)))
+            resp = self.serialInstance.write(to_bytes(addrList))
+            
+            response = self.serialInstance.read(1)
+            response = hex(int.from_bytes(response,byteorder='little'))
+            if response == hex(ACK):
+                print("Starting execution...")
+            if response == hex(NACK):
+                print("Got NACK!")
+
+
     def writeMemoryCmd(self):
         print("Place holder for write memory command")
         
@@ -207,7 +226,9 @@ def parse_arguments():
 def main(FlasherObj):
     if FlasherObj.checkReady():
         #FlasherObj.getCmd()
-        FlasherObj.getIDCmd()
+        #FlasherObj.getIDCmd()
+        #FlasherObj.readMemoryCmd("08000000", 255)
+        FlasherObj.goCmd("08000000")
     else:
         print("Cannot init device.")
 
