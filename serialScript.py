@@ -202,9 +202,41 @@ class Flasher():
                 if response == hex(NACK):
                     print("Got NACK!")
 
-    def eraseMemoryCmd(self):
-        print("Place holder for erase memory command")
-        
+    def eraseMemoryCmd(self, noOfPages, pageNo):
+        resp = self.serialInstance.write(to_bytes([0x43, 0xBC]))
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            if noOfPages == 0xff:
+                #Global Erase
+                resp = self.serialInstance.write(to_bytes([0xFF, 0x00]))
+                response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
+                if response == hex(ACK):
+                    print("Global Erase Complete")
+                else:
+                    print("Could not complte global erase")
+
+            if noOfPages != 0xff:
+                print("Number of pages is not FF")
+                noOfPages = noOfPages-1
+                packet = list()
+                packet.append(noOfPages)
+                packet = packet + pageNo
+                packet.append(self.getCRC(packet))
+                print(packet)
+                resp = self.serialInstance.write(to_bytes(packet))
+                response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
+                if response == hex(ACK):
+                    print("Erase complete.")
+                else:
+                    print("Could not complete erase.")
+
+        if response == hex(NACK):
+            print("Got Nack")
+            
     def extendEraseMemoryCmd(self):
         print("Place holder foe extended erase memory command")
         
@@ -255,11 +287,15 @@ def parse_arguments():
     
 def main(FlasherObj):
     if FlasherObj.checkReady():
-        #FlasherObj.getCmd()
+        FlasherObj.getCmd()
         #FlasherObj.getIDCmd()
         #Send 1 byte less in count
-        FlasherObj.writeMemoryCmd("0800FF00", [0x12, 0x12, 0x12, 0x12], 3)
-        FlasherObj.readMemoryCmd("0800FF00", 4)
+        FlasherObj.readoutUnprotect()
+        pageNo = list()
+        pageNo.append(0)
+        FlasherObj.eraseMemoryCmd(0xFF, pageNo)
+        #FlasherObj.writeMemoryCmd("0800FF00", [0x12, 0x12, 0x12, 0x12], 3)
+        #FlasherObj.readMemoryCmd("0800FF00", 255)
         #FlasherObj.goCmd("08000000")
     else:
         print("Cannot init device.")
