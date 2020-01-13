@@ -237,8 +237,15 @@ class Flasher():
         if response == hex(NACK):
             print("Got Nack")
             
-    def extendEraseMemoryCmd(self):
-        print("Place holder foe extended erase memory command")
+    def extendEraseMemoryCmd(self, noOfPages):
+        resp = self.serialInstance.write(to_bytes([0x44, 0xBB]))
+        #Wait for ACK/NACK
+        response = self.serialInstance.read(1)
+        response = hex(int.from_bytes(response,byteorder='little'))
+        if response == hex(ACK):
+            print("Got ACK")
+        else:
+            print("Got NACK")
         
     def writeProtectCmd(self):
         resp = self.serialInstance.write(to_bytes([0x63, 0x9C]))
