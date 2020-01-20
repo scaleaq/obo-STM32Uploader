@@ -284,11 +284,15 @@ class Flasher():
             print("Readout Unprotect Done.")
         
             
-        
+   
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-b', help='Set serial baud rate')
-    parser.add_argument('-d', help='Serial Device Path')
+    parser.add_argument('-b', help='Set serial baud rate.')
+    parser.add_argument('-d', help='Serial Device Path.')
+    parser.add_argument('-c', help='Get hex codes of all supported commands.')
+    parser.add_argument('-v', help='Get bootloader version and option bytes.')
+    parser.add_argument('-i', help='Get part ID')
+    parser.add_argument('-g', help='Start Execution from the given address.')
     
     return parser
     
