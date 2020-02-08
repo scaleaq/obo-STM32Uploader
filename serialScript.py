@@ -218,8 +218,7 @@ class Flasher():
                 else:
                     print("Could not complte global erase")
 
-            if noOfPages != 0xff:
-                print("Number of pages is not FF")
+            if noOfPages != 0xff and noOfPages != 0x00: 
                 noOfPages = noOfPages-1
                 packet = list()
                 packet.append(noOfPages)
@@ -303,8 +302,8 @@ def main(FlasherObj):
         #Send 1 byte less in count
         FlasherObj.readoutUnprotect()
         pageNo = list()
-        pageNo.append(0)
-        FlasherObj.eraseMemoryCmd(0xFF, pageNo)
+        pageNo.append(1)
+        FlasherObj.eraseMemoryCmd(0x01, pageNo)
         #FlasherObj.writeMemoryCmd("0800FF00", [0x12, 0x12, 0x12, 0x12], 3)
         #FlasherObj.readMemoryCmd("0800FF00", 255)
         #FlasherObj.goCmd("08000000")
