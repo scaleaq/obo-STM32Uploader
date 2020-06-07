@@ -21,6 +21,10 @@ class Flasher():
         if self.serialInstance.isOpen() is False:
             print("Cannot open serial port!")
             exit(1)
+
+    def flushSerial(self):
+        self.serialInstance.flushInput()
+        self.serialInstance.flushOutput()
             
     #CRC
     def getCRC(self, data):
@@ -67,7 +71,33 @@ class Flasher():
                     print("Bootloader Version: ", versionString)
                     print("Supported Commands: ")
                 else:
-                    print(hex(resp[r]), end=" ")
+                    cmd = resp[r]
+                    print(hex(cmd), end=" ")
+                    if cmd == 0:
+                        print("Get")
+                    if cmd == 1:
+                        print("Get Version & Read Protection Status")
+                    if cmd == 2:
+                        print("Get ID")
+                    if cmd == 17:
+                        print("Read Memory")
+                    if cmd == 33:
+                        print("Go")
+                    if cmd == 49:
+                        print("Write Memory")
+                    if cmd == 67:
+                        print("Erase")
+                    if cmd == 68:
+                        print("Extended Erase")
+                    if cmd == 99:
+                        print("Write Protect")
+                    if cmd == 115:
+                        print("Write Unprotect")
+                    if cmd == 130:
+                        print("Readout Protect")
+                    if cmd == 146:
+                        print("Readout Unprotect")
+                    
 
             print()
                 
@@ -116,10 +146,11 @@ class Flasher():
             print("Product Id: ", hex(resp))
             
         else:
-            print("Communication Erro!")
+            print("Communication Error!")
             exit(1)
             
     def readMemoryCmd(self, addr, noOfBytes):
+
         resp = self.serialInstance.write(to_bytes([0x11, 0xEE]))
         
         #Wait for ACK/NACK
@@ -288,22 +319,49 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', help='Set serial baud rate.')
     parser.add_argument('-d', help='Serial Device Path.')
-    parser.add_argument('-c', help='Get hex codes of all supported commands.')
-    parser.add_argument('-v', help='Get bootloader version and option bytes.')
-    parser.add_argument('-i', help='Get part ID')
+    parser.add_argument('-c', action='store_true',help='Get hex codes of all supported commands.')
+    parser.add_argument('-v', action='store_true',help='Get bootloader version and option bytes.')
+    parser.add_argument('-i', action='store_true',help='Get part ID')
+    parser.add_argument('-r', help='Read Memory Pages.', nargs=2)
     parser.add_argument('-g', help='Start Execution from the given address.')
     
     return parser
     
-def main(FlasherObj):
+def main(FlasherObj, args):
     if FlasherObj.checkReady():
-        FlasherObj.getCmd()
-        #FlasherObj.getIDCmd()
+
+        if args.i:
+            FlasherObj.getIDCmd()
+            FlasherObj.flushSerial()
+            
+        if args.c:
+            FlasherObj.getCmd()
+            FlasherObj.flushSerial()
+
+        if args.v:
+            FlasherObj.getVersionAndReadProtectionCmd()
+            FlasherObj.flushSerial()
+
+        if args.r:
+            if len(args.r[0]) < 8:
+                pre = 8 - len(args.r[0])
+                args.r[0] = "0"*pre + args.r[0]
+            FlasherObj.readMemoryCmd(args.r[0], int(args.r[1]))
+        
+        if args.g:
+            print(args.g)
+            print(type(args.g))
+            if len(args.g) < 8:
+                pre = 8 - len(args.g)
+                args.g = "0"*pre + args.g
+            FlasherObj.goCmd(args.g)
+
+
         #Send 1 byte less in count
-        FlasherObj.readoutUnprotect()
-        pageNo = list()
-        pageNo.append(1)
-        FlasherObj.eraseMemoryCmd(0x01, pageNo)
+        ##FlasherObj.readoutUnprotect()
+        ##pageNo = list()
+        ##pageNo.append(1)
+        ##FlasherObj.eraseMemoryCmd(0x01, pageNo)
         #FlasherObj.writeMemoryCmd("0800FF00", [0x12, 0x12, 0x12, 0x12], 3)
         #FlasherObj.readMemoryCmd("0800FF00", 255)
         #FlasherObj.goCmd("08000000")
@@ -321,9 +379,10 @@ if __name__ == "__main__":
     if args.b is None:
         print("Baud rate not selected, default=115200")
         args.b = 115200
+
     elif (int(args.b) < 1200 or int(args.b) > 115200) is True:
         print("Baud Rate should be between 1200 and 115200")
         exit(0)
 
     flashing = Flasher(args.d, args.b)
-    main(flashing)
+    main(flashing, args)
