@@ -4,8 +4,8 @@ The bootloader on most STM32 microcontrollers supports UART protocol to download
 
 | Device        | Result        | Setting                            |
 | ------------- | ------------- | ---------------------------------  |
-| STM32F072RBT6 | &#10004;       | Boot0(pin) = 1 and nBoot1(bit) = 1 |
-| STM32F103     | Not tested    | Boot0(pin) = 1 and Boot1(pin) = 0  |
-| STM32F401     | Not tested    | Boot0(pin) = 1 and Boot1(pin) = 0  |
-| STM32F303     | Not tested    | Boot0(pin) = 1 and nBoot1(bit) = 1 |
-| STM32L4R5     | Not tested    |                                    |
+| STM32F072RBT6 | &#10004;      | Boot0(pin) = 1 and nBoot1(bit) = 1 |
+| STM32F103     | &#8722;       | Boot0(pin) = 1 and Boot1(pin) = 0  |
+| STM32F401     | &#8722;       | Boot0(pin) = 1 and Boot1(pin) = 0  |
+| STM32F303     | &#8722;       | Boot0(pin) = 1 and nBoot1(bit) = 1 |
+| STM32L4R5     | &#8722;       |                                    |
