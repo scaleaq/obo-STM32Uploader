@@ -414,15 +414,7 @@ def main(FlasherObj, args):
            #FlasherObj.readoutUnprotect()
            pageNo = list()
            pageNo.append(1)
-           FlasherObj.extendEraseMemoryCmd(0xFFFF)
-        #Send 1 byte less in count
-        ##FlasherObj.readoutUnprotect()
-        ##pageNo = list()
-        ##pageNo.append(1)
-        ##FlasherObj.eraseMemoryCmd(0x01, pageNo)
-        #FlasherObj.writeMemoryCmd("0800FF00", [0x12, 0x12, 0x12, 0x12], 3)
-        #FlasherObj.readMemoryCmd("0800FF00", 255)
-        #FlasherObj.goCmd("08000000")
+           FlasherObj.extendEraseMemoryCmd(args.x)
     else:
         print("Cannot init device.")
 
