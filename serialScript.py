@@ -247,6 +247,7 @@ class Flasher():
                 if response == hex(ACK):
                     print("Global Erase Complete")
                 else:
+                    print(response)
                     print("Could not complte global erase")
 
             if noOfPages != 0xff and noOfPages != 0x00: 
@@ -266,7 +267,11 @@ class Flasher():
 
         if response == hex(NACK):
             print("Got Nack")
-            
+    '''
+    Right now the function just supports Special Erase cases...
+    Mass Erase, Bank1
+    TODO: Support Extended Erase with number of pages
+    '''
     def extendEraseMemoryCmd(self, noOfPages):
         resp = self.serialInstance.write(to_bytes([0x44, 0xBB]))
         #Wait for ACK/NACK
@@ -274,6 +279,47 @@ class Flasher():
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             print("Got ACK")
+            if noOfPages == 0xFFFF:
+                packet = list()
+                packet.append(0xFF)
+                packet.append(0xFF)
+                packet.append(self.getCRC(packet))
+                print(packet)
+                resp = self.serialInstance.write(to_bytes(packet))
+                response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
+                if response == hex(ACK):
+                    print("Extended erase complete.")
+                else:
+                    print("Could not complete extended erase.")
+
+            if noOfPages == 0xFFFE:
+                packet = list()
+                packet.append(0xFF)
+                packet.append(0xFE)
+                packet.append(self.getCRC(packet))
+                print(packet)
+                resp = self.serialInstance.write(to_bytes(packet))
+                response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
+                if response == hex(ACK):
+                    print("Extended erase complete.")
+                else:
+                    print("Could not complete extended erase.")
+
+            if noOfPages == 0xFFFD:
+                packet = list()
+                packet.append(0xFF)
+                packet.append(0xFD)
+                packet.append(self.getCRC(packet))
+                print(packet)
+                resp = self.serialInstance.write(to_bytes(packet))
+                response = self.serialInstance.read(1)
+                response = hex(int.from_bytes(response,byteorder='little'))
+                if response == hex(ACK):
+                    print("Extended erase complete.")
+                else:
+                    print("Could not complete extended erase.")
         else:
             print("Got NACK")
         
@@ -324,6 +370,8 @@ def parse_arguments():
     parser.add_argument('-i', action='store_true',help='Get part ID')
     parser.add_argument('-r', help='Read Memory Pages.', nargs=2)
     parser.add_argument('-g', help='Start Execution from the given address.')
+    parser.add_argument('-e', help='Erase pages', nargs=2)
+    parser.add_argument('-x', help='Erase pages')
     
     return parser
     
@@ -356,7 +404,17 @@ def main(FlasherObj, args):
                 args.g = "0"*pre + args.g
             FlasherObj.goCmd(args.g)
 
+        if args.e:
+           FlasherObj.readoutUnprotect()
+           pageNo = list()
+           pageNo.append(1)
+           FlasherObj.eraseMemoryCmd(0, 0)
 
+        if args.x:
+           #FlasherObj.readoutUnprotect()
+           pageNo = list()
+           pageNo.append(1)
+           FlasherObj.extendEraseMemoryCmd(0xFFFF)
         #Send 1 byte less in count
         ##FlasherObj.readoutUnprotect()
         ##pageNo = list()
