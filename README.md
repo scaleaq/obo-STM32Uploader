@@ -1,5 +1,25 @@
 # STM32Uploader
-The bootloader on most STM32 microcontrollers supports UART protocol to download code into the internal flash memory through the interface. STM32Uploader is a simple python program to communicate with STM32 bootloader via the UART peripheral. 
+The bootloader on most STM32 microcontrollers supports UART protocol to download code into the internal flash memory through the interface. STM32Uploader is a simple python program to communicate with STM32 bootloader via the UART peripheral.
+
+
+# Usage
+Get usage information
+```
+python3 serialScript.py -h
+```
+
+## Example
+Get part ID
+
+```
+python3 serialScript.py -d /dev/ttyUSB0 -i
+```
+
+Get a list of supported commands
+
+```
+python3 serialScript.py -d /dev/ttyUSB0 -c
+```
 
 
 | Device        | Result        | Setting                            |
