@@ -21,6 +21,7 @@ Get a list of supported commands
 python3 serialScript.py -d /dev/ttyUSB0 -c
 ```
 
+# Tests
 
 | Device        | Result        | Setting                            |
 | ------------- | ------------- | ---------------------------------  |
