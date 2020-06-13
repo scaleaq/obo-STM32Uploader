@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import argparse
 from serial import *
+import os
 
 ACK = 0x79
 NACK = 0x1F
@@ -34,6 +35,17 @@ class Flasher():
             
         return crc
 
+    '''Takes address as a string, increments it and
+        returns back a string
+    '''
+    def incrementAddress(self, addr, inc):
+        addrHex = int(addr, 16)
+        addrHex = addrHex + inc
+        hexStr = hex(addrHex)
+        if len(hexStr[2:])%2 == 1:
+            hexStr = '0' + hexStr[2:]
+
+        return hexStr
     #Send 0x7f on serial so that the host selects the connected UART port
     #and adjusts the baud rate.
     #All the command routines should start after this.
@@ -113,7 +125,6 @@ class Flasher():
         response = self.serialInstance.read(1)
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
-            print("Got ACK")
             resp = self.serialInstance.read(3)
             resp = list(resp)
             for r in range(len(resp)):
@@ -193,7 +204,6 @@ class Flasher():
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             #Sending a dummy hardcoded haddress here, add arg later
-            #addr = [0x08, 0x00, 0x00, 0x00]
             addrList = list(bytes.fromhex(addr))
             addrList.append((self.getCRC(addrList)))
             resp = self.serialInstance.write(to_bytes(addrList))
@@ -208,14 +218,13 @@ class Flasher():
 
     def writeMemoryCmd(self, addr, data, noOfBytes):
         resp = self.serialInstance.write(to_bytes([0x31, 0xCE]))
-        
+        noOfBytes = noOfBytes -1
         #Wait for ACK/NACK
         response = self.serialInstance.read(1)
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             addrList = list(bytes.fromhex(addr))
             addrList.append((self.getCRC(addrList)))
-            print(addrList)
             resp = self.serialInstance.write(to_bytes(addrList))
             
             response = self.serialInstance.read(1)
@@ -229,9 +238,10 @@ class Flasher():
                 response = self.serialInstance.read(1)
                 response = hex(int.from_bytes(response,byteorder='little'))
                 if response == hex(ACK):
-                    print("Write Complete")
+                    return True
                 if response == hex(NACK):
                     print("Got NACK!")
+                    return False
 
     def eraseMemoryCmd(self, noOfPages, pageNo):
         resp = self.serialInstance.write(to_bytes([0x43, 0xBC]))
@@ -279,12 +289,11 @@ class Flasher():
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             print("Got ACK")
-            if noOfPages == 0xFFFF:
+            if noOfPages == '0xFFFF':
                 packet = list()
                 packet.append(0xFF)
                 packet.append(0xFF)
                 packet.append(self.getCRC(packet))
-                print(packet)
                 resp = self.serialInstance.write(to_bytes(packet))
                 response = self.serialInstance.read(1)
                 response = hex(int.from_bytes(response,byteorder='little'))
@@ -293,12 +302,11 @@ class Flasher():
                 else:
                     print("Could not complete extended erase.")
 
-            if noOfPages == 0xFFFE:
+            if noOfPages == '0xFFFE':
                 packet = list()
                 packet.append(0xFF)
                 packet.append(0xFE)
                 packet.append(self.getCRC(packet))
-                print(packet)
                 resp = self.serialInstance.write(to_bytes(packet))
                 response = self.serialInstance.read(1)
                 response = hex(int.from_bytes(response,byteorder='little'))
@@ -307,12 +315,11 @@ class Flasher():
                 else:
                     print("Could not complete extended erase.")
 
-            if noOfPages == 0xFFFD:
+            if noOfPages == '0xFFFD':
                 packet = list()
                 packet.append(0xFF)
                 packet.append(0xFD)
                 packet.append(self.getCRC(packet))
-                print(packet)
                 resp = self.serialInstance.write(to_bytes(packet))
                 response = self.serialInstance.read(1)
                 response = hex(int.from_bytes(response,byteorder='little'))
@@ -358,8 +365,31 @@ class Flasher():
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
             print("Readout Unprotect Done.")
-        
-            
+
+
+    def writeBinary(self, filePath, addr):
+        try:
+            with open(filePath, "rb") as binary_file:
+                #Read the whole file at once
+                data = binary_file.read()
+                d = list(data)
+                dataPackets = int((len(data)/128))
+                if len(data)%128 != 0:
+                    dataPackets = dataPackets+1
+                startIndex = 0
+                endIndex = 128
+                while dataPackets > 1:
+                    self.writeMemoryCmd(addr, d[startIndex:endIndex], 128)
+                    addr = self.incrementAddress(addr, 128)
+                    startIndex = startIndex + 128
+                    endIndex = endIndex + 128
+                    dataPackets = dataPackets - 1
+
+                self.writeMemoryCmd(addr, d[startIndex:], len(d[startIndex:]))
+                return True
+        except FileNotFoundError:
+            print("Cannot open file,", filePath)
+            return False
    
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -371,7 +401,8 @@ def parse_arguments():
     parser.add_argument('-r', help='Read Memory Pages.', nargs=2)
     parser.add_argument('-g', help='Start Execution from the given address.')
     parser.add_argument('-e', help='Erase pages', nargs=2)
-    parser.add_argument('-x', help='Erase pages')
+    parser.add_argument('-x', help='Erase pages (Extended Erase)')
+    parser.add_argument('-f', help='Upload binary file', nargs=2)
     
     return parser
     
@@ -397,8 +428,6 @@ def main(FlasherObj, args):
             FlasherObj.readMemoryCmd(args.r[0], int(args.r[1]))
         
         if args.g:
-            print(args.g)
-            print(type(args.g))
             if len(args.g) < 8:
                 pre = 8 - len(args.g)
                 args.g = "0"*pre + args.g
@@ -411,10 +440,12 @@ def main(FlasherObj, args):
            FlasherObj.eraseMemoryCmd(0, 0)
 
         if args.x:
-           #FlasherObj.readoutUnprotect()
-           pageNo = list()
-           pageNo.append(1)
            FlasherObj.extendEraseMemoryCmd(args.x)
+
+        if args.f:
+           if len(args.f[1])%2 == 1:
+               args.f[1] = '0' + args.f[1]
+           FlasherObj.writeBinary(args.f[0], args.f[1])
     else:
         print("Cannot init device.")
 
