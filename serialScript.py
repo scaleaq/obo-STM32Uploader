@@ -242,8 +242,11 @@ class Flasher():
                 if response == hex(NACK):
                     print("Got NACK!")
                     return False
-
+    '''Currently only mass erase is supported
+    ToDo: Add support for page wise erase
+    '''
     def eraseMemoryCmd(self, noOfPages, pageNo):
+        noOfPages = noOfPages - 1
         resp = self.serialInstance.write(to_bytes([0x43, 0xBC]))
         #Wait for ACK/NACK
         response = self.serialInstance.read(1)
@@ -260,21 +263,6 @@ class Flasher():
                     print(response)
                     print("Could not complte global erase")
 
-            if noOfPages != 0xff and noOfPages != 0x00: 
-                noOfPages = noOfPages-1
-                packet = list()
-                packet.append(noOfPages)
-                packet = packet + pageNo
-                packet.append(self.getCRC(packet))
-                print(packet)
-                resp = self.serialInstance.write(to_bytes(packet))
-                response = self.serialInstance.read(1)
-                response = hex(int.from_bytes(response,byteorder='little'))
-                if response == hex(ACK):
-                    print("Erase complete.")
-                else:
-                    print("Could not complete erase.")
-
         if response == hex(NACK):
             print("Got Nack")
     '''
@@ -288,7 +276,6 @@ class Flasher():
         response = self.serialInstance.read(1)
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
-            print("Got ACK")
             if noOfPages == '0xFFFF':
                 packet = list()
                 packet.append(0xFF)
@@ -434,10 +421,7 @@ def main(FlasherObj, args):
             FlasherObj.goCmd(args.g)
 
         if args.e:
-           FlasherObj.readoutUnprotect()
-           pageNo = list()
-           pageNo.append(1)
-           FlasherObj.eraseMemoryCmd(0, 0)
+           FlasherObj.eraseMemoryCmd(args.e[0], int(args.e[1]))
 
         if args.x:
            FlasherObj.extendEraseMemoryCmd(args.x)
