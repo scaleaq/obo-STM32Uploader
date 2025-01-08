@@ -246,12 +246,15 @@ class Flasher():
     ToDo: Add support for page wise erase
     '''
     def eraseMemoryCmd(self, noOfPages, pageNo):
+        noOfPages = int(noOfPages)
+        pageNo = int(pageNo)
         noOfPages = noOfPages - 1
         resp = self.serialInstance.write(to_bytes([0x43, 0xBC]))
         #Wait for ACK/NACK
         response = self.serialInstance.read(1)
         response = hex(int.from_bytes(response,byteorder='little'))
         if response == hex(ACK):
+            print("first ok")
             if noOfPages == 0xff:
                 #Global Erase
                 resp = self.serialInstance.write(to_bytes([0xFF, 0x00]))

@@ -41,12 +41,26 @@ Start Execution
 python3 serialScript.py -d /dev/ttyUSB0 -g 8000000
 ```
 
-# Tests
+# Flash procedure
 
-| Device                 | Result         | Setting                            | UART Pins           |
-| ---------------------- | -------------- | ---------------------------------  | ------------------- |
-| STM32F072 Discovery    | &#10004;       | Boot0(pin) = 1 and nBoot1(bit) = 1 | PA14(Tx), PA15(Rx)  |
-| STM32F103 Blue Pill    | &#10004;       | Boot0(pin) = 1 and Boot1(pin) = 0  | PA9(Tx), PA10(Rx)   |
-| STM32F401-C Discovery  | &#10004;       | Boot0(pin) = 1 and Boot1(pin) = 0  | PD5(Tx), PD6(Rx     |
-| STM32F3 Discovery      | &#10004;       | Boot0(pin) = 1 and nBoot1(bit) = 1 | PA9(Tx), PA10(Rx)   |
-| STM32L4R5              | &#8722;        |                                    |                     |
+## Bring chip into bootloader
+
+by BOOT1=0, BOOT0=1 while power up/reset
+
+## Erase flash
+
+```
+python3 serialScript.py -d /dev/ttyUSB0 -x 0xFFFF
+```
+
+## Bring chip into bootloader again
+
+by BOOT1=0, BOOT0=1 while power up/reset
+
+## Program flash by binary file
+
+```
+python3 serialScript.py -d /dev/ttyUSB0 -f ./bins/stm32f072b/blinky.bin 8000000
+```
+
+## reboot the board to run
